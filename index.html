@@ -2,200 +2,498 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Automa — Monta un servicio con IA</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="El método, los prompts y las skills para ofrecer a negocios reales un servicio hecho con IA y conseguir tu primer cliente.">
+<meta name="theme-color" content="#090814">
 <!-- Dirección del servidor que crea el pago. Cámbiala si el servidor se muda. -->
 <meta name="automa-api" content="https://chilie-chatbot.onrender.com">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* ── Tokens ─────────────────────────────────────────── */
   :root {
-    --bg: #0d0c1d; --panel: #16152e; --panel-2: #1d1b3a; --line: #2b2952;
-    --text: #f2f1fb; --muted: #a9a6c9; --accent: #7c6cf2; --accent-2: #9b8cff; --ok: #5fd39a;
-    --radius: 16px; --max: 1080px;
+    --bg: #090814; --bg-1: #0e0d1f; --bg-2: #141329; --surface: #1a1934;
+    --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.14);
+    --text: #f4f3fc; --text-2: #b4b1d0; --text-3: #8683a8;
+    --accent: #7c6cf2; --accent-hi: #a497ff; --accent-line: rgba(124,108,242,.38); --accent-tint: rgba(124,108,242,.12);
+    --ok: #6dd6a4; --no: #ef9a9a;
+    --r-sm: 10px; --r: 16px; --r-lg: 24px;
+    --max: 1160px; --gutter: clamp(20px, 4vw, 40px);
+    --section: clamp(72px, 10vw, 128px);
+    --head: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+    --body: "DM Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    --ease: cubic-bezier(.22,.61,.36,1);
   }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-  a { color: var(--accent-2); }
-  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--text); text-decoration: none; }
-  .brand img { width: 34px; height: 34px; border-radius: 9px; }
-  .btn { display: inline-block; border: 0; border-radius: 12px; padding: 14px 22px; font: inherit; font-weight: 650; cursor: pointer; text-decoration: none; text-align: center; transition: transform .12s, background .12s; }
-  .btn:active { transform: translateY(1px); }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #8a7bf5; }
-  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
-  .btn-ghost:hover { background: var(--panel); }
-  .btn[disabled] { opacity: .6; cursor: wait; }
-  .btn-small { padding: 10px 16px; font-size: 15px; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.65 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  h1, h2, h3 { font-family: var(--head); margin: 0; letter-spacing: -.03em; line-height: 1.08; }
+  p { margin: 0; }
+  a { color: var(--accent-hi); text-underline-offset: 3px; }
+  svg { display: block; flex: none; }
+  :focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 3px; border-radius: 6px; }
+  .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+  .skip { position: absolute; left: 16px; top: -60px; background: var(--accent); color: #fff; padding: 10px 16px; border-radius: var(--r-sm); z-index: 200; text-decoration: none; }
+  .skip:focus { top: 12px; }
 
-  .hero { padding: 56px 0 72px; }
-  .eyebrow { color: var(--accent-2); font-weight: 650; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
-  h1 { font-size: clamp(34px, 6.2vw, 62px); line-height: 1.06; letter-spacing: -.02em; margin: 14px 0 20px; max-width: 16ch; }
-  .lead { font-size: clamp(18px, 2.2vw, 21px); color: var(--muted); max-width: 56ch; margin: 0 0 30px; }
-  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .hero-note { color: var(--muted); font-size: 14px; margin-top: 16px; }
+  /* ── Botones ────────────────────────────────────────── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 24px; border-radius: 12px; border: 1px solid transparent; font: 600 16px/1 var(--head); letter-spacing: -.01em; text-decoration: none; cursor: pointer; touch-action: manipulation; transition: background .22s var(--ease), border-color .22s var(--ease), transform .22s var(--ease), box-shadow .22s var(--ease); }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 0 0 rgba(124,108,242,0); }
+  .btn-primary:hover { background: #8b7cf6; box-shadow: 0 0 32px rgba(124,108,242,.35); }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--line-strong); }
+  .btn-ghost:hover { border-color: var(--accent-line); background: var(--accent-tint); }
+  .btn-sm { min-height: 44px; padding: 0 18px; font-size: 15px; }
+  .btn-block { width: 100%; }
+  .btn[disabled] { opacity: .55; cursor: progress; }
+  .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  section { padding: 64px 0; border-top: 1px solid var(--line); }
-  h2 { font-size: clamp(26px, 3.6vw, 36px); line-height: 1.15; letter-spacing: -.01em; margin: 0 0 12px; }
-  .sub { color: var(--muted); max-width: 60ch; margin: 0 0 36px; }
+  /* ── Navegación ─────────────────────────────────────── */
+  .nav { position: sticky; top: 0; z-index: 100; background: rgba(9,8,20,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: border-color .22s var(--ease); }
+  .nav.scrolled { border-bottom-color: var(--line); }
+  .nav-in { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font: 700 20px/1 var(--head); letter-spacing: -.03em; color: var(--text); text-decoration: none; min-height: 44px; }
+  .brand img { width: 32px; height: 32px; border-radius: 9px; }
+  .nav-links { display: none; gap: 30px; }
+  .nav-links a { color: var(--text-2); text-decoration: none; font-size: 15px; transition: color .22s var(--ease); }
+  .nav-links a:hover { color: var(--text); }
+  @media (min-width: 860px) { .nav-links { display: flex; } }
+
+  /* ── Hero ───────────────────────────────────────────── */
+  .hero { position: relative; padding: clamp(48px, 8vw, 96px) 0 var(--section); }
+  .hero::before { content: ""; position: absolute; inset: -68px 0 0; z-index: -2; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 20%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 20%, transparent 75%); opacity: .55; }
+  .hero-glow { position: absolute; z-index: -1; top: -140px; left: 50%; width: min(900px, 130vw); height: 620px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(124,108,242,.30), transparent 70%); pointer-events: none; }
+  .hero-grid { display: grid; gap: clamp(40px, 6vw, 72px); align-items: center; }
+  @media (min-width: 980px) { .hero-grid { grid-template-columns: 1.08fr .92fr; } }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--accent-line); background: var(--accent-tint); color: var(--accent-hi); font: 500 13.5px/1 var(--body); letter-spacing: .01em; }
+  .chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-hi); }
+  h1 { font-size: clamp(2.5rem, 6.4vw, 4.4rem); font-weight: 800; margin: 22px 0 22px; max-width: 13ch; }
+  h1 em { font-style: normal; color: var(--accent-hi); }
+  .lead { font-size: clamp(1.06rem, 1.6vw, 1.2rem); color: var(--text-2); max-width: 54ch; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .trust { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 26px; padding: 0; list-style: none; color: var(--text-3); font-size: 14.5px; }
+  .trust li { display: inline-flex; align-items: center; gap: 8px; }
+  .trust svg { color: var(--ok); }
+
+  /* Maqueta del hero */
+  .mock { position: relative; }
+  .panel { background: linear-gradient(180deg, var(--bg-2), var(--bg-1)); border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 0 80px rgba(124,108,242,.14); }
+  .panel-bar { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--line); color: var(--text-3); font: 500 13px/1 var(--mono); }
+  .dots { display: inline-flex; gap: 6px; margin-right: 6px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line-strong); }
+  .panel-body { padding: 22px 20px 26px; font: 400 13.5px/1.75 var(--mono); color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .panel-body b { color: var(--accent-hi); font-weight: 400; background: var(--accent-tint); padding: 1px 5px; border-radius: 5px; }
+  .panel-body .c { color: var(--text-3); }
+  .float { position: absolute; display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; font-size: 13.5px; color: var(--text); box-shadow: 0 0 40px rgba(9,8,20,.8); }
+  .float small { display: block; color: var(--text-3); font-size: 12px; line-height: 1.3; }
+  .float .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-tint); color: var(--accent-hi); }
+  .mock { margin: 40px 0 30px; }
+  .mock > .panel .panel-body { padding-bottom: 60px; }
+  .float-a { right: -8px; top: -42px; }
+  .float-b { left: -12px; bottom: -26px; }
+  @media (max-width: 520px) { .float-a { right: 10px; } .float-b { left: 10px; } .cta-row .btn { flex: 1 1 100%; } }
+
+  /* ── Cifras ─────────────────────────────────────────── */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--bg-1); }
+  @media (min-width: 760px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat { padding: 28px 22px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .stat b { display: block; font: 800 clamp(2.1rem, 4.4vw, 3rem)/1 var(--head); letter-spacing: -.04em; color: var(--accent-hi); font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 10px; color: var(--text-2); font-size: 14.5px; line-height: 1.4; }
+
+  /* ── Secciones ──────────────────────────────────────── */
+  section { padding: var(--section) 0; }
+  .eyebrow { font: 600 13px/1 var(--head); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-hi); }
+  h2 { font-size: clamp(1.9rem, 4vw, 3rem); font-weight: 800; margin: 16px 0 16px; max-width: 20ch; }
+  .sub { color: var(--text-2); max-width: 58ch; font-size: 1.06rem; }
+  .head { margin-bottom: clamp(36px, 5vw, 56px); }
+  .alt { background: var(--bg-1); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+  .card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r); padding: 30px; transition: border-color .25s var(--ease), transform .25s var(--ease); }
+  .card h3 { font-size: 1.22rem; font-weight: 700; margin-bottom: 10px; letter-spacing: -.02em; }
+  .card p { color: var(--text-2); font-size: 16px; }
+  @media (hover: hover) { .card.lift:hover { border-color: var(--accent-line); transform: translateY(-3px); } }
   .grid { display: grid; gap: 16px; }
-  .g3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-  .g2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
-  .card h3 { margin: 0 0 8px; font-size: 19px; }
-  .card p { margin: 0; color: var(--muted); }
-  .step { color: var(--accent-2); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
-  ul.check { list-style: none; padding: 0; margin: 0; }
-  ul.check li { padding-left: 28px; position: relative; margin: 9px 0; }
-  ul.check li::before { content: ""; position: absolute; left: 4px; top: .5em; width: 11px; height: 6px; border-left: 2px solid var(--ok); border-bottom: 2px solid var(--ok); transform: rotate(-45deg); }
-  ul.cross li::before { width: 12px; height: 2px; border: 0; background: #e58a8a; transform: none; top: .8em; }
-  .honest { background: var(--panel-2); border: 0; border-radius: var(--radius); padding: 48px 24px; margin-bottom: 8px; }
-  .honest + section { border-top: 0; }
+  @media (min-width: 720px) { .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .g3 { grid-template-columns: repeat(3, 1fr); } }
+  .ic-box { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-tint); border: 1px solid var(--accent-line); color: var(--accent-hi); margin-bottom: 20px; }
 
-  .price-card { display: flex; flex-direction: column; }
-  .price-card.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-  .tag { align-self: flex-start; background: rgba(124,108,242,.18); color: var(--accent-2); font-size: 13px; font-weight: 650; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
-  .price { font-size: 46px; font-weight: 750; letter-spacing: -.02em; margin: 6px 0 2px; }
-  .price small { font-size: 15px; font-weight: 500; color: var(--muted); }
-  .price-card ul { flex: 1; margin: 16px 0 24px; }
-  .consent { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-top: 20px; font-size: 15px; color: var(--muted); }
-  .consent input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--accent); flex: none; }
-  .consent.error { border-color: #e58a8a; }
-  .msg { min-height: 24px; margin-top: 12px; color: #f0a0a0; font-size: 15px; }
+  /* Pasos */
+  .steps { counter-reset: step; }
+  .step { position: relative; }
+  .step .n { font: 800 3.4rem/1 var(--head); letter-spacing: -.05em; color: transparent; -webkit-text-stroke: 1px var(--accent-line); margin-bottom: 18px; }
+  .step .when { display: inline-block; margin-top: 16px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--text-3); font-size: 13px; }
 
-  details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
-  summary { cursor: pointer; font-weight: 650; }
-  details p { color: var(--muted); margin: 12px 0 0; }
-  footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
-  footer a { color: var(--muted); }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+  /* Muestra del kit */
+  .sample { display: grid; gap: clamp(32px, 5vw, 64px); align-items: center; }
+  @media (min-width: 980px) { .sample { grid-template-columns: .9fr 1.1fr; } }
+  .list { list-style: none; padding: 0; margin: 26px 0 0; }
+  .list li { position: relative; padding-left: 32px; margin: 12px 0; color: var(--text-2); }
+  .list li svg { position: absolute; left: 0; top: 4px; color: var(--ok); }
+  .list.no li svg { color: var(--no); }
+  .list li strong { color: var(--text); font-weight: 500; }
+  .tabs { display: flex; gap: 6px; padding: 10px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; min-height: 40px; padding: 0 14px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: var(--text-3); font: 500 14px/1 var(--body); cursor: pointer; transition: color .22s var(--ease), background .22s var(--ease), border-color .22s var(--ease); }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--accent-hi); background: var(--accent-tint); border-color: var(--accent-line); }
+  .tabpanel[hidden] { display: none; }
+  .tabpanel .panel-body { min-height: 300px; }
+
+  /* Precios */
+  .plans { display: grid; gap: 18px; align-items: stretch; }
+  @media (min-width: 860px) { .plans { grid-template-columns: repeat(2, 1fr); } }
+  .plan { display: flex; flex-direction: column; padding: clamp(26px, 3.4vw, 38px); border-radius: var(--r-lg); background: var(--bg-2); border: 1px solid var(--line); }
+  .plan.best { border-color: var(--accent-line); background: linear-gradient(180deg, rgba(124,108,242,.10), var(--bg-2) 42%); box-shadow: 0 0 70px rgba(124,108,242,.14); }
+  .plan-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
+  .plan h3 { font-size: 1.3rem; font-weight: 700; }
+  .badge { padding: 6px 11px; border-radius: 999px; background: var(--accent-tint); border: 1px solid var(--accent-line); color: var(--accent-hi); font: 500 12.5px/1 var(--body); white-space: nowrap; }
+  .price { display: flex; align-items: baseline; gap: 10px; margin: 22px 0 6px; }
+  .price b { font: 800 clamp(3rem, 7vw, 3.8rem)/1 var(--head); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+  .price span { color: var(--text-3); font-size: 15px; }
+  .plan-for { color: var(--text-2); font-size: 15.5px; min-height: 3.2em; }
+  .plan .list { flex: 1; margin: 22px 0 30px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .plan .list li { font-size: 15.5px; margin: 11px 0; }
+  .consent { display: flex; gap: 14px; align-items: flex-start; margin-top: 20px; padding: 20px 22px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line); color: var(--text-2); font-size: 15px; line-height: 1.55; cursor: pointer; transition: border-color .22s var(--ease); }
+  .consent input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--accent); flex: none; cursor: pointer; }
+  .consent.error { border-color: var(--no); }
+  .msg { min-height: 26px; margin-top: 12px; color: var(--no); font-size: 15px; }
+  .pay-note { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; color: var(--text-3); font-size: 14px; }
+  .pay-note span { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* FAQ */
+  .faq { max-width: 820px; }
+  details { border-bottom: 1px solid var(--line); }
+  summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 68px; padding: 14px 0; cursor: pointer; list-style: none; font: 600 1.06rem/1.35 var(--head); letter-spacing: -.01em; }
+  summary::-webkit-details-marker { display: none; }
+  summary .plus { position: relative; width: 28px; height: 28px; flex: none; border-radius: 50%; border: 1px solid var(--line-strong); transition: border-color .22s var(--ease), transform .3s var(--ease); }
+  summary .plus::before, summary .plus::after { content: ""; position: absolute; left: 50%; top: 50%; width: 11px; height: 1.5px; background: var(--text-2); transform: translate(-50%, -50%); }
+  summary .plus::after { transform: translate(-50%, -50%) rotate(90deg); transition: transform .3s var(--ease); }
+  details[open] summary .plus { border-color: var(--accent-line); }
+  details[open] summary .plus::after { transform: translate(-50%, -50%) rotate(0); }
+  details p { color: var(--text-2); padding: 0 48px 24px 0; max-width: 68ch; }
+
+  /* Cierre */
+  .final { text-align: center; padding: clamp(48px, 7vw, 84px) clamp(22px, 5vw, 60px); border-radius: var(--r-lg); border: 1px solid var(--accent-line); background: radial-gradient(ellipse 70% 120% at 50% 0%, rgba(124,108,242,.22), transparent 70%), var(--bg-1); }
+  .final h2 { margin-inline: auto; max-width: 18ch; }
+  .final .sub { margin-inline: auto; }
+  .final .cta-row { justify-content: center; }
+
+  footer { padding: 40px 0 120px; color: var(--text-3); font-size: 14px; border-top: 1px solid var(--line); }
+  footer .row { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; justify-content: space-between; }
+  footer a { color: var(--text-2); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+  footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  footer p { margin-top: 18px; max-width: 70ch; }
+  @media (min-width: 860px) { footer { padding-bottom: 48px; } }
+
+  /* Barra fija de compra en móvil */
+  .buybar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom)); background: rgba(14,13,31,.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line-strong); transform: translateY(110%); transition: transform .32s var(--ease); }
+  .buybar.show { transform: none; }
+  .buybar div { font-size: 13.5px; color: var(--text-3); line-height: 1.3; }
+  .buybar b { display: block; font: 700 17px/1.2 var(--head); color: var(--text); letter-spacing: -.02em; }
+  @media (min-width: 860px) { .buybar { display: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <a class="brand" href="./"><img src="logo.svg" alt="">Automa</a>
-    <a class="btn btn-ghost btn-small" href="#precios">Ver precios</a>
-  </header>
+<a class="skip" href="#contenido">Saltar al contenido</a>
 
-  <main>
-    <div class="hero">
-      <div class="eyebrow">Kit práctico de IA</div>
-      <h1>Monta un servicio con IA y sal a por tu primer cliente.</h1>
-      <p class="lead">Hay trabajos por los que los negocios ya pagan y que con IA se hacen en una fracción del tiempo. Automa te da el método para elegir uno, los prompts y las skills para hacerlo bien, y la rutina para encontrar a quien lo pague.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#precios">Empezar por 25 €</a>
-        <a class="btn btn-ghost" href="#dentro">Ver qué incluye</a>
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="./" aria-label="Automa, inicio"><img src="logo.svg" alt="" width="32" height="32">Automa</a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#plan">El plan</a>
+      <a href="#dentro">Qué incluye</a>
+      <a href="#precios">Precios</a>
+      <a href="#faq">Preguntas</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#precios">Ver precios</a>
+  </div>
+</header>
+
+<main id="contenido">
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div class="hero-content">
+        <span class="chip rv"><i></i>Kit práctico de IA · pago único</span>
+        <h1 class="rv">Monta un servicio con IA y sal a por tu <em>primer cliente</em>.</h1>
+        <p class="lead rv">Hay trabajos por los que los negocios ya pagan y que con IA se hacen en una fracción del tiempo. Automa te da el método para elegir uno, los prompts para hacerlo bien y la rutina para encontrar a quien lo pague.</p>
+        <div class="cta-row rv">
+          <a class="btn btn-primary" href="#precios">Empezar por 25 €
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#dentro">Ver un prompt del kit</a>
+        </div>
+        <ul class="trust rv">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Acceso al momento</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Sin suscripción</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Con Claude o ChatGPT</li>
+        </ul>
       </div>
-      <p class="hero-note">Pago único. Acceso inmediato por correo. Sin suscripción.</p>
+
+      <div class="mock rv" aria-hidden="true">
+        <div class="float float-a"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg></span><span>Skill instalada<small>auditoria-web-express</small></span></div>
+        <div class="panel">
+          <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span>captacion-clientes.md</div>
+<div class="panel-body"><span class="c"># Mensaje de primer contacto</span>
+
+Escribe un primer mensaje para <b>[nombre]</b>,
+de <b>[negocio]</b>, por <b>[WhatsApp]</b>.
+
+Detalle que he visto: <b>[detalle]</b>
+Muestra que he preparado: <b>[qué es]</b>
+
+- Menos de 60 palabras.
+- Empieza por el detalle, no por mí.
+- No menciones IA ni precios.
+- Termina con una pregunta de sí o no.</div>
+        </div>
+        <div class="float float-b"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg></span><span>5 negocios al día<small>la rutina del tutorial 3</small></span></div>
+      </div>
     </div>
+  </div>
 
-    <section>
-      <h2>El plan, en tres pasos</h2>
-      <p class="sub">Una hora al día. La primera semana terminas con un servicio definido y una muestra real que enseñar.</p>
-      <div class="grid g3">
-        <div class="card"><div class="step">PASO 1</div><h3>Elige un servicio</h3><p>Uno solo, para un tipo de negocio concreto: contenido, textos de venta o webs sencillas. Te ayudamos a elegir según lo que ya sabes hacer.</p></div>
-        <div class="card"><div class="step">PASO 2</div><h3>Haz una muestra</h3><p>Le haces el trabajo de verdad a un negocio real, sin que te lo pida. Los prompts y las skills te llevan del encargo al entregable.</p></div>
-        <div class="card"><div class="step">PASO 3</div><h3>Contacta cada día</h3><p>Cinco negocios al día, con mensajes que demuestran que has mirado el suyo. Con la muestra por delante, no con promesas.</p></div>
+  <!-- ── Cifras ── -->
+  <div class="wrap">
+    <div class="stats" id="stats">
+      <div class="stat"><b data-count="4">4</b><span>tutoriales paso a paso</span></div>
+      <div class="stat"><b data-count="30" data-prefix="+">+30</b><span>prompts listos para copiar</span></div>
+      <div class="stat"><b data-count="3">3</b><span>skills para instalar en Claude</span></div>
+      <div class="stat"><b data-count="1" data-suffix=" h">1 h</b><span>al día es lo que pide el método</span></div>
+    </div>
+  </div>
+
+  <!-- ── El plan ── -->
+  <section id="plan">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow rv">El plan</div>
+        <h2 class="rv">Un servicio, una muestra y cinco mensajes al día.</h2>
+        <p class="sub rv">La primera semana terminas con un servicio definido y un trabajo real que enseñar. A partir de ahí, la rutina es siempre la misma.</p>
       </div>
-    </section>
-
-    <section id="dentro">
-      <h2>Qué hay dentro</h2>
-      <p class="sub">Todo está escrito para usarse, no para leerse: copias, rellenas los huecos y trabajas.</p>
-      <div class="grid g3">
-        <div class="card"><h3>4 tutoriales</h3><p>Configurar tu IA, tu primer servicio en 7 días, conseguir tu primer cliente y cómo poner precio.</p></div>
-        <div class="card"><h3>Más de 30 prompts</h3><p>Para captar clientes, crear contenido, escribir textos de venta, entregar el trabajo y organizarte.</p></div>
-        <div class="card"><h3>3 skills para Claude</h3><p>Auditoría web, propuesta comercial y guiones de vídeo corto. Se instalan una vez y Claude las usa cuando toca.</p></div>
-        <div class="card"><h3>Guía en PDF</h3><p>Los tutoriales y los prompts en un solo documento para leer donde quieras.</p></div>
-        <div class="card"><h3>Repositorio privado</h3><p>Acceso por invitación en GitHub. Ahí llegan las actualizaciones y las mejoras.</p></div>
-        <div class="card"><h3>Funciona con lo que ya usas</h3><p>Claude o ChatGPT. Puedes empezar con el plan gratuito de cualquiera de los dos.</p></div>
+      <div class="grid g3 steps">
+        <article class="card lift step rv"><div class="n" aria-hidden="true">01</div><h3>Elige un servicio</h3><p>Uno solo y para un tipo de negocio concreto: contenido, textos de venta o webs sencillas. El kit te ayuda a elegir según lo que ya sabes hacer.</p><span class="when">Día 1 a 3</span></article>
+        <article class="card lift step rv"><div class="n" aria-hidden="true">02</div><h3>Haz una muestra</h3><p>Le haces el trabajo de verdad a un negocio real, sin que te lo pida. Los prompts y las skills te llevan del encargo al entregable.</p><span class="when">Día 4 a 7</span></article>
+        <article class="card lift step rv"><div class="n" aria-hidden="true">03</div><h3>Contacta cada día</h3><p>Cinco negocios al día, con un mensaje que demuestra que has mirado el suyo. Con la muestra por delante, no con promesas.</p><span class="when">Desde la semana 2</span></article>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="honest">
-      <h2>Lo que Automa no es</h2>
-      <p class="sub">Preferimos decírtelo antes de que pagues.</p>
+  <!-- ── Muestra del kit ── -->
+  <section id="dentro" class="alt">
+    <div class="wrap sample">
+      <div>
+        <div class="eyebrow rv">Qué incluye</div>
+        <h2 class="rv">Está escrito para usarse, no para leerse.</h2>
+        <p class="sub rv">Copias el prompt, rellenas los huecos y trabajas. A la derecha tienes tres prompts tal como vienen en el kit.</p>
+        <ul class="list rv">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>4 tutoriales:</strong> configurar tu IA, tu primer servicio en 7 días, conseguir tu primer cliente y poner precio.</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Más de 30 prompts</strong> para captar clientes, crear contenido, escribir textos de venta y entregar el trabajo.</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>3 skills para Claude:</strong> auditoría web, propuesta comercial y guiones de vídeo corto.</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Guía en PDF</strong> y repositorio privado en GitHub, donde llegan las actualizaciones.</li>
+        </ul>
+      </div>
+
+      <div class="panel rv">
+        <div class="tabs" role="tablist" aria-label="Prompts de ejemplo">
+          <button class="tab" role="tab" id="t1" aria-controls="p1" aria-selected="true">Analizar un negocio</button>
+          <button class="tab" role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1">Guion de vídeo</button>
+          <button class="tab" role="tab" id="t3" aria-controls="p3" aria-selected="false" tabindex="-1">Revisar antes de entregar</button>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="p1" aria-labelledby="t1">
+<div class="panel-body">Voy a escribir a este negocio para ofrecerle <b>[servicio]</b>.
+Antes quiero entenderlo.
+
+Texto de su web: <b>[pega aquí]</b>
+Lo que veo en sus redes y reseñas: <b>[pega aquí]</b>
+
+Dime:
+1. Qué vende y a quién, en dos frases.
+2. Tres cosas que hace bien.
+3. Tres fallos visibles desde fuera, de más a menos grave.
+4. Un detalle concreto y positivo que pueda mencionar.
+
+Usa solo lo que te he pegado. Si algo no lo sabes,
+dilo en vez de suponerlo.</div>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+<div class="panel-body">Escribe un guion de 30 a 40 segundos para un vídeo
+vertical de <b>[negocio]</b>.
+
+Tema: <b>[tema]</b>
+Quién lo graba: <b>[dueño / empleado / voz en off]</b>
+
+- 0-3 s: una frase que haga parar el dedo.
+  Sin "hola" ni presentación.
+- 3-30 s: tres ideas, una por plano.
+- Final: una sola acción que pedir.
+
+Escríbelo como se habla, con frases de menos
+de 12 palabras. Añade qué se ve en pantalla.</div>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+<div class="panel-body">Voy a entregar esto a un cliente: <b>[trabajo]</b>
+
+Los datos reales del negocio son: <b>[datos]</b>
+
+Comprueba:
+1. Que no haya ningún dato que no esté en la
+   lista de datos reales.
+2. Faltas y frases que no se entienden a la primera.
+3. Promesas que el negocio no puede garantizar.
+
+Dame la lista de problemas; no lo reescribas todavía.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Honestidad ── -->
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow rv">Antes de que pagues</div>
+        <h2 class="rv">Lo que Automa no es.</h2>
+        <p class="sub rv">Si buscas dinero sin trabajar, este kit no es para ti. Te lo decimos ahora y no después.</p>
+      </div>
       <div class="grid g2">
-        <div class="card">
+        <div class="card rv">
           <h3>No te prometemos</h3>
-          <ul class="check cross">
-            <li>Una cifra de ingresos. Nadie puede prometértela.</li>
-            <li>Dinero sin trabajar. Hay que contactar con negocios cada día.</li>
-            <li>Que la IA lo haga sola. Todo lo que entregas hay que revisarlo.</li>
+          <ul class="list no">
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><strong>Una cifra de ingresos.</strong> Nadie puede prometértela.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><strong>Resultados sin esfuerzo.</strong> Hay que escribir a negocios cada día, y la mayoría no contesta.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><strong>Que la IA lo haga sola.</strong> Todo lo que entregas hay que revisarlo.</li>
           </ul>
         </div>
-        <div class="card">
+        <div class="card rv">
           <h3>Sí te damos</h3>
-          <ul class="check">
-            <li>Un método paso a paso que cabe en una hora al día.</li>
-            <li>Las herramientas para producir más rápido y con mejor resultado.</li>
-            <li>Una forma concreta de saber qué falla cuando nadie contesta.</li>
+          <ul class="list">
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Un método</strong> que cabe en una hora al día.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Las herramientas</strong> para producir más rápido y con mejor resultado.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Un diagnóstico:</strong> qué revisar, y en qué orden, cuando nadie contesta.</li>
           </ul>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="precios">
-      <h2>Precios</h2>
-      <p class="sub">Pago único, IVA incluido. Recibes el acceso por correo en cuanto se confirma el pago.</p>
-      <div class="grid g2">
-        <div class="card price-card">
-          <h3>Automa</h3>
-          <div class="price">25 € <small>pago único</small></div>
-          <ul class="check">
-            <li>Guía en PDF</li>
-            <li>4 tutoriales</li>
-            <li>Más de 30 prompts</li>
-            <li>3 skills para Claude</li>
-            <li>Repositorio privado con actualizaciones</li>
-          </ul>
-          <button class="btn btn-ghost" data-plan="base">Comprar Automa</button>
-        </div>
-        <div class="card price-card featured">
-          <span class="tag">Con soporte</span>
-          <h3>Automa Premium</h3>
-          <div class="price">89 € <small>pago único</small></div>
-          <ul class="check">
-            <li>Todo lo de Automa</li>
-            <li>Plantillas: acuerdo de servicio, bienvenida de cliente y calculadora de precios</li>
-            <li>Agentes: asistente por cliente y revisor de entregas</li>
-            <li>Recetas de automatización con n8n</li>
-            <li>Comunidad privada en Discord</li>
-            <li>30 días de revisión de tu caso por el equipo, con respuesta en 48 horas laborables</li>
-          </ul>
-          <button class="btn btn-primary" data-plan="premium">Comprar Premium</button>
-        </div>
+  <!-- ── Precios ── -->
+  <section id="precios" class="alt">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow rv">Precios</div>
+        <h2 class="rv">Un pago y es tuyo.</h2>
+        <p class="sub rv">IVA incluido. Recibes el acceso por correo en cuanto se confirma el pago. Disponible en España y en países de fuera de la Unión Europea.</p>
       </div>
-      <label class="consent" id="consent-box">
+
+      <div class="plans">
+        <article class="plan rv">
+          <div class="plan-top"><h3>Automa</h3></div>
+          <div class="price"><b>25 €</b><span>pago único</span></div>
+          <p class="plan-for">Para empezar por tu cuenta con el método y todas las herramientas.</p>
+          <ul class="list">
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Guía en PDF</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>4 tutoriales</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Más de 30 prompts</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>3 skills para Claude</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Repositorio privado con actualizaciones</li>
+          </ul>
+          <button class="btn btn-ghost btn-block" data-plan="base">Comprar Automa por 25 €</button>
+        </article>
+
+        <article class="plan best rv">
+          <div class="plan-top"><h3>Automa Premium</h3><span class="badge">Con revisión de tu caso</span></div>
+          <div class="price"><b>89 €</b><span>pago único</span></div>
+          <p class="plan-for">Para quien quiere que alguien mire su oferta, su muestra y sus mensajes y le diga qué cambiar.</p>
+          <ul class="list">
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Todo lo de Automa</strong></li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>30 días de revisión de tu caso</strong>, con respuesta en 48 horas laborables</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Comunidad privada en Discord</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Plantillas: acuerdo de servicio, bienvenida de cliente y calculadora de precios</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Agentes: asistente por cliente y revisor de entregas</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Recetas de automatización con n8n</li>
+          </ul>
+          <button class="btn btn-primary btn-block" data-plan="premium">Comprar Premium por 89 €</button>
+        </article>
+      </div>
+
+      <label class="consent rv" id="consent-box">
         <input type="checkbox" id="consent">
         <span>Quiero recibir el contenido de inmediato y entiendo que, al ser contenido digital, pierdo el derecho de desistimiento de 14 días en cuanto se me entrega. Acepto las <a href="condiciones.html" target="_blank" rel="noopener">condiciones de compra</a>, que incluyen la <a href="condiciones.html#datos" target="_blank" rel="noopener">información sobre tus datos</a>.</span>
       </label>
-      <div class="msg" id="msg" role="alert"></div>
-    </section>
+      <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+      <div class="pay-note">
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Pago seguro con Stripe</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Tarjeta, Apple Pay y Google Pay</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>Entrega por correo al momento</span>
+      </div>
+    </div>
+  </section>
 
-    <section>
-      <h2>Preguntas frecuentes</h2>
-      <details><summary>¿Necesito saber programar?</summary><p>No. Los prompts se copian y se pegan. Las skills se instalan subiendo un archivo. Solo las recetas de automatización del plan Premium piden algo más de soltura, y van paso a paso.</p></details>
-      <details><summary>¿Cuánto voy a ganar?</summary><p>No lo sabemos, y quien te dé una cifra te está engañando. Depende de las horas que le dediques, de tu mercado y de lo que ya sepas hacer. Lo que sí controlas es a cuántos negocios escribes y lo buena que es tu muestra, y en eso se centra el kit.</p></details>
-      <details><summary>¿Qué necesito para empezar?</summary><p>Una cuenta en Claude o ChatGPT (el plan gratuito vale para empezar), un ordenador y una hora al día durante al menos un mes.</p></details>
-      <details><summary>¿Cómo recibo el acceso?</summary><p>Por correo, al momento: la guía en PDF adjunta y la invitación al repositorio privado de GitHub. Si no tienes cuenta de GitHub, te explicamos cómo crearla gratis. En Premium recibes además el enlace al Discord y tu código de activación.</p></details>
-      <details><summary>¿Puedo devolverlo?</summary><p>Al ser contenido digital que se entrega al momento, la compra no admite desistimiento una vez entregado; por eso te pedimos que lo aceptes antes de pagar. Si algo no te llega o no funciona, escríbenos y lo resolvemos.</p></details>
-      <details><summary>¿Qué incluye exactamente el soporte Premium?</summary><p>Durante 30 días desde que activas tu código, el equipo revisa tu oferta, tu muestra y tus mensajes de contacto y te da correcciones concretas, con respuesta en un máximo de 48 horas laborables. No incluye hacer el trabajo de tus clientes ni conseguírtelos.</p></details>
-    </section>
-  </main>
+  <!-- ── FAQ ── -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow rv">Preguntas frecuentes</div>
+        <h2 class="rv">Lo que suele preguntar la gente.</h2>
+      </div>
+      <div class="faq rv">
+        <details><summary>¿Necesito saber programar?<span class="plus" aria-hidden="true"></span></summary><p>No. Los prompts se copian y se pegan, y las skills se instalan subiendo un archivo. Solo las recetas de automatización del plan Premium piden algo más de soltura, y van paso a paso.</p></details>
+        <details><summary>¿Cuánto voy a ganar?<span class="plus" aria-hidden="true"></span></summary><p>No lo sabemos, y quien te dé una cifra te está engañando. Depende de las horas que le dediques, de tu mercado y de lo que ya sepas hacer. Lo que sí controlas es a cuántos negocios escribes y lo buena que es tu muestra, y en eso se centra el kit.</p></details>
+        <details><summary>¿Qué necesito para empezar?<span class="plus" aria-hidden="true"></span></summary><p>Una cuenta en Claude o ChatGPT (el plan gratuito vale para empezar), un ordenador y una hora al día durante al menos un mes.</p></details>
+        <details><summary>¿Cómo recibo el acceso?<span class="plus" aria-hidden="true"></span></summary><p>Por correo, al momento: la guía en PDF adjunta y la invitación al repositorio privado de GitHub. Si no tienes cuenta de GitHub, te explicamos cómo crearla gratis. En Premium recibes además el enlace al Discord y tu código de activación.</p></details>
+        <details><summary>¿Puedo devolverlo?<span class="plus" aria-hidden="true"></span></summary><p>Al ser contenido digital que se entrega al momento, la compra no admite desistimiento una vez entregado; por eso te pedimos que lo aceptes antes de pagar. Si algo no te llega o no funciona, escríbenos y lo resolvemos.</p></details>
+        <details><summary>¿Qué incluye exactamente la revisión Premium?<span class="plus" aria-hidden="true"></span></summary><p>Durante 30 días desde que activas tu código, el equipo revisa tu oferta, tu muestra y tus mensajes de contacto y te da correcciones concretas, con respuesta en un máximo de 48 horas laborables. No incluye hacer el trabajo de tus clientes ni conseguírtelos.</p></details>
+      </div>
+    </div>
+  </section>
 
-  <footer>
-    <p>Automa · <a href="condiciones.html">Condiciones de compra y datos del vendedor</a> · <a href="condiciones.html#datos">Privacidad</a></p>
+  <!-- ── Cierre ── -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="final rv">
+        <h2>Dentro de una semana puedes tener tu primera muestra hecha.</h2>
+        <p class="sub">Una hora al día, un plan claro y las herramientas para ejecutarlo.</p>
+        <div class="cta-row"><a class="btn btn-primary" href="#precios">Ver los dos planes</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <a class="brand" href="./"><img src="logo.svg" alt="" width="32" height="32">Automa</a>
+      <nav aria-label="Legal">
+        <a href="condiciones.html">Condiciones de compra y datos del vendedor</a>
+        <a href="condiciones.html#datos">Privacidad</a>
+      </nav>
+    </div>
     <p>Los resultados dependen del trabajo y de las circunstancias de cada persona. Este kit no garantiza ingresos.</p>
-  </footer>
+  </div>
+</footer>
+
+<div class="buybar" id="buybar">
+  <div><b>Automa desde 25 €</b>Pago único · acceso al momento</div>
+  <a class="btn btn-primary btn-sm" href="#precios">Ver planes</a>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script>
+// ── Compra ───────────────────────────────────────────────
 (() => {
   const api = document.querySelector('meta[name="automa-api"]').content.replace(/\/+$/, '');
   const consent = document.getElementById('consent');
@@ -209,13 +507,14 @@
     msg.textContent = '';
     if (!consent.checked) {
       box.classList.add('error');
-      msg.textContent = 'Marca la casilla de abajo para continuar con la compra.';
+      msg.textContent = 'Marca la casilla de arriba para continuar con la compra.';
       box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      consent.focus({ preventScroll: true });
       return;
     }
-    const label = button.textContent;
+    const label = button.innerHTML;
     buttons.forEach((b) => { b.disabled = true; });
-    button.textContent = 'Abriendo el pago…';
+    button.innerHTML = '<span class="spinner" aria-hidden="true"></span>Abriendo el pago…';
     try {
       const res = await fetch(`${api}/api/automa/checkout`, {
         method: 'POST',
@@ -226,12 +525,86 @@
       if (!res.ok || !data.url) throw new Error(data.error || 'No se ha podido iniciar el pago.');
       window.location.href = data.url;
     } catch (err) {
-      msg.textContent = err.message === 'Failed to fetch' ? 'No hay conexión con el servidor de pago. Inténtalo de nuevo en un minuto.' : err.message;
+      msg.textContent = err instanceof TypeError ? 'No hay conexión con el servidor de pago. Inténtalo de nuevo en un minuto.' : err.message;
       buttons.forEach((b) => { b.disabled = false; });
-      button.textContent = label;
+      button.innerHTML = label;
     }
   }));
 })();
+
+// ── Pestañas de prompts ──────────────────────────────────
+(() => {
+  const tabs = [...document.querySelectorAll('.tab')];
+  const select = (tab, focus) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) tab.focus();
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') select(tabs[(i + 1) % tabs.length], true);
+      if (e.key === 'ArrowLeft') select(tabs[(i - 1 + tabs.length) % tabs.length], true);
+    });
+  });
+})();
+
+// ── Barra de navegación y barra fija de compra ───────────
+(() => {
+  const nav = document.getElementById('nav');
+  const bar = document.getElementById('buybar');
+  const pricing = document.getElementById('precios');
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY;
+    nav.classList.toggle('scrolled', y > 8);
+    const r = pricing.getBoundingClientRect();
+    const inPricing = r.top < window.innerHeight * 0.75 && r.bottom > 120;
+    bar.classList.toggle('show', y > 620 && !inPricing);
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  update();
+})();
+
+// ── Animaciones (el contenido es visible aunque esto no cargue) ──
+window.addEventListener('DOMContentLoaded', () => {
+  if (!window.gsap || !window.ScrollTrigger) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  const heroEls = document.querySelectorAll('.hero .rv');
+  gsap.set(heroEls, { opacity: 0, y: 32 });
+  gsap.to(heroEls, { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out', stagger: 0.12, delay: 0.1, clearProps: 'opacity,transform' });
+  gsap.to('.hero-glow', { y: -70, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1 } });
+
+  document.querySelectorAll('main section').forEach((section) => {
+    const els = section.querySelectorAll('.rv');
+    if (!els.length) return;
+    gsap.set(els, { opacity: 0, y: 26 });
+    ScrollTrigger.create({
+      trigger: section, start: 'top 82%', once: true,
+      onEnter: () => gsap.to(els, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', stagger: 0.08, clearProps: 'opacity,transform' }),
+    });
+  });
+
+  document.querySelectorAll('#stats b[data-count]').forEach((el) => {
+    const target = Number(el.dataset.count);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    ScrollTrigger.create({
+      trigger: el, start: 'top 90%', once: true,
+      onEnter() {
+        const o = { v: 0 };
+        gsap.to(o, { v: target, duration: 1.4, ease: 'power2.out', onUpdate: () => { el.textContent = prefix + Math.round(o.v) + suffix; } });
+      },
+    });
+  });
+});
 </script>
 </body>
 </html>
